@@ -1,0 +1,36 @@
+{
+  "name": "googlemapsncharttestbed",
+  "version": "1.0.0",
+  "description": "Test bed for implementation of Google Maps API, Bootstrap and a graphing package (D3js or Canvas) in a single website",
+  "main": "/dist/index.html",
+  "scripts": {
+    "build": "webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YFLooi/GoogleMapsNChartTestbed.git"
+  },
+  "author": "YF Looi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YFLooi/GoogleMapsNChartTestbed/issues"
+  },
+  "homepage": "https://github.com/YFLooi/GoogleMapsNChartTestbed#readme",
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "express": "^4.17.1",
+    "jquery": "^3.4.1",
+    "popper.js": "^1.15.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^9.6.1",
+    "css-loader": "^3.2.0",
+    "node-sass": "^4.12.0",
+    "postcss-loader": "^3.0.0",
+    "sass-loader": "^8.0.0",
+    "style-loader": "^1.0.0",
+    "webpack": "^4.40.2",
+    "webpack-cli": "^3.3.9"
+  }
+}

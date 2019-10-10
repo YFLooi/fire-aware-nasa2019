@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <title>Greenhouse gas emission visualiser</title>
-    <link rel="stylesheet" href="../src/mapStyles.css">
+    <link rel="stylesheet" href="./css/mapStyles.css">
    
     <!--Load the API from the specified URL
     * The async attribute allows the browser to render the page while the API loads
@@ -12,17 +12,18 @@
     * The callback parameter executes the initMap() function
     -->
     <!--src to call API using assigned key: src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&CALL-STUFF-HERE" -->
-    <!--'&callback=initMap' passes the calls to the Maps API made with initMap() on page load-->
+    <!--'&callback=initMap' passes the calls to the Maps API made with initMap() on page load. Wait, does not work when page 
+    loaded from Express backend?-->
     <!--'&libraries=visualization' Loads up google.maps.visualisation library for heatmaps-->
     <script type="text/javascript" async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCl6RtMrpOskELXpQocWoOqZxf_qT2y69M&callback=initMap&libraries=visualization">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCl6RtMrpOskELXpQocWoOqZxf_qT2y69M&libraries=visualization">
     </script>   
     <!--Scripts to operate Google Maps API-->
-    <script type="text/javascript" src='../src/map.js'></script> 
-    <script src="./bundle.js"></script>
+    <script type="text/javascript" src='./js/map.js'></script> 
+    <script type="text/javascript" src="./js/bundle.js"></script>
     <!--Scripts to operate Canvas.js maps-->
-    <script type="text/javascript" src="../canvas/canvasjs.min.js"></script>
-    <script type="text/javascript" src="../src/chart.js"></script>
+    <script type="text/javascript" src="./canvas/canvasjs.min.js"></script>
+    <script type="text/javascript" src="./js/chart.js"></script>
     <script type='text/javascript'>
       window.onload = function () {
         //Sets all checkboxes for chart element to 'checked' on page load
@@ -33,6 +34,7 @@
           chartElementToggle[i].checked = true
         }
 
+        initMap();
         renderChart();
       }
     </script>

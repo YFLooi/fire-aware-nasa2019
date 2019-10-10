@@ -2,11 +2,15 @@
   "name": "googlemapsncharttestbed",
   "version": "1.0.0",
   "description": "Test bed for implementation of Google Maps API, Bootstrap and a graphing package (D3js or Canvas) in a single website",
-  "main": "/dist/index.html",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "10.16.0",
+    "npm": "6.9.0"
   },
   "repository": {
     "type": "git",

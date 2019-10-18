@@ -4,6 +4,30 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <title>Greenhouse gas emission visualiser</title>
+
+     <!-- The core Firebase JS SDK is always required and must be listed first -->
+     <!-- Original end of this url is 'firebase-app.js'. This does not work!! Use firebase.js instead-->
+     <script src="https://www.gstatic.com/firebasejs/7.2.0/firebase.js"></script>
+
+     <!-- TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries -->
+ 
+     <script>
+       // Your web app's Firebase configuration
+       var firebaseConfig = {
+         apiKey: "AIzaSyAplfPUP0ygPtbSQYWEG6cr2vlAl6misvw",
+         authDomain: "nasa2019-a41ab.firebaseapp.com",
+         databaseURL: "https://nasa2019-a41ab.firebaseio.com",
+         projectId: "nasa2019-a41ab",
+         storageBucket: "nasa2019-a41ab.appspot.com",
+         messagingSenderId: "947284643043",
+         appId: "1:947284643043:web:04f306d3ff8556dbde49d6"
+       };
+       // Initialize Firebase
+       firebase.initializeApp(firebaseConfig);
+     </script>
+
+
     <link rel="stylesheet" href="./css/mapStyles.css">
    
     <!--Load the API from the specified URL
@@ -38,11 +62,35 @@
         renderChart();
       }
     </script>
+
+  <script type='text/javascript'>
+    const database = firebase.database();
+
+    function fetchDb(){
+      database.ref('modis/1Sep2019').once('value', (snapshot) => {
+        //Gets object attached to 'snapshot'
+        //This comment pulls in the db data into an object
+        const data = snapshot.val()
+        
+        //Will output an object. The object contains all data as its properties
+        console.log(Object.keys(data).length);
+
+        
+        /*
+        for(i=0 ; i<i++){
+
+        }*/
+
+      })
+  
+    }
+  </script>
   </head>
   <body>
     <h3>Greenhouse gas emission visualiser</h3>
     <!--The div element for the map -->
-    
+    <button onclick="fetchDb()">db check</button>
+
     <div id='mapContainer'>
       <div id="map"></div>
     </div>
@@ -96,5 +144,6 @@
         <div style='float: left; width: 20px; height: 20px; background-color:rgb(255, 251, 0);'>1</div>
     </div>
     
+   
   </body>
 </html>

@@ -1,4 +1,6 @@
 //Locations. Assume this data is retrieved from a db for a specific time and hour
+/** */
+const database = firebase.database();
 const locations = [
     {name: 'San Clemente Island', shortName:'SCI', lat: 32.92, lng: -118.49, elevation: '100m', co2: 411, ch4: 1000, dewptT: -6.25, pressure: 1011, windDir: 158.7, windSpd: 0.79},
     {name: 'California Institute of Technology', shortName:'CIT', lat: 34.14, lng: -118.13, elevation: '20m', co2: 435, ch4: 1014, dewptT: 4.0, pressure: 1025, windDir: 320.1, windSpd: 0.01},
@@ -7,10 +9,10 @@ const locations = [
     {name: 'La Jolla', shortName:'LJA', lat: 32.87, lng: -117.25, elevation: '10m', co2: 415, ch4: 1100, dewptT: 4.13, pressure: 1012, windDir: 90.1, windSpd: 0.87},
 ]
 
+
 //'Popup' is a class, popup is a variable
 let map, heatmap, co2Data, ch4Data, popup, Popup;
-//Important regulator to determine if co2 or ch4 data to be used
-let usech4Data = false;
+
 //First value determines outermost gradient. Must be 'rgba(255, 255, 255, 0)'
 //or the entire map will be coloured
 //4th value in rgba code is 'intensity'. '0' is invisible, '1' is maximum intensity
@@ -49,63 +51,52 @@ const ch4DarkGradient = [
     'rgba(255, 250, 0, 1)',
 ]
 
+let mapData = [];
+function runInitMap(newMapData){
+    mapData.splice(0, mapData.length)
+    console.log('newMapData:');
+    console.log(newMapData);
+
+    if(newMapData.length === 0){
+        document.getElementById('map').innerHTML = 'No data found for selected date';
+    } else {
+        document.getElementById('map').innerHTML = '';
+        mapData = [...mapData, ...newMapData];
+        initMap();
+    }
+}
+
 // On page load, initialize and add the map
 function initMap() {
     //On page load, processes co2 and ch4 data for rendering onto map
     //By default, sends co2Data to map on page load
     //Weight can indicate ppm emissions relative to baseline at SCI: Let weight = ppm at location/ppm @ SCI
-    co2Data = []
-    //Setup so that weight at SCI (baseline location) = 1
-    for(i=0; i<locations.length; i++){
-        co2Data[i] = { location: new google.maps.LatLng(locations[i].lat, locations[i].lng), weight: (locations[i].co2/locations[0].co2) }
-    }
-    ch4Data = []
-    //Setup so that weight at SCI (baseline location) = 1
-    //(locations[i].co2/locations[0].co2)
-    for(i=0; i<locations.length; i++){
-        ch4Data[i] = { location: new google.maps.LatLng(locations[i].lat, locations[i].lng), weight: (locations[i].ch4/locations[0].ch4) }
-    }
-    infowindowContent = []
-    for(i=0; i<locations.length; i++){
-        infowindowContent[i] = '<div id="content">'+
-            '<div id="location"><b>Sensor location: '+locations[i].name+'</b></div>'+
-            '<div id="bodyContent">'+
-                '<div>Coordinates: '+ locations[i].lat+','+ locations[i].lng+'</div>'+    
-                '<div>Elevation: '+ locations[i].elevation+'</div>'+    
-                '<div>CO2 (ppm): '+ locations[i].elevation+ ' CH4 (ppb): '+ locations[i].elevation+'</div>'+
-                '<div>Dewpoint temp (°C): '+ locations[i].dewptT+'</div>'+  
-                '<div>Atmospheric pressure (milibar): '+ locations[i].elevation+'</div>'+  
-                '<div>Wind direction (°): '+ locations[i].windDir+ ' Wind speed (m/s): '+ locations[i].windSpd+'</div>'+  
-            '</div>'+
-        '</div>'
-    }
-
-    // The location of centre point. Here, we choose IRV (Irvine, LA)
-    var centerCoordinates = {lat: locations[2].lat, lng: locations[2].lng};
+    
+    //var dataArray populated on page load. Script in index.html
+    const dataArray = mapData;
+    
+    // The location of centre point. Here, we choose the middle of the South China Sea
+    var centerCoordinates = {lat: 2.4374, lng: 110.4814};
     // The map, centered at at the coordinates in 'var centre'
     //mapTypeId determines the type of map on render. Can be 'roadmap', 'satellite', or 'terrain'
     map = new google.maps.Map(
-        document.getElementById('map'), {zoom: 7.75, center: centerCoordinates, mapTypeId: 'terrain'});
-    // for loop to generate all the markers for sensor position
-    for (i=0; i<5; i++){
+        document.getElementById('map'), {zoom: 4.5, center: centerCoordinates, mapTypeId: 'terrain'});
+    // for loop to generate all the markers for anomaly position
+    for (i=0; i<dataArray.length; i++){
         let marker = new google.maps.Marker({
-            position: {lat: locations[i].lat, lng: locations[i].lng}, 
+            position: {lat: dataArray[i].latitude, lng: dataArray[i].longlitude}, 
             map: map,
-            title: locations[i].name
+            title: 'Anomaly detected' //Appears on hover over the marker
         })
 
         //Data for content must be from same array as data for marker!
         //Otherwise, the InfoWindow will be blank or appear in some odd place
         let infowindow = new google.maps.InfoWindow({
             content: '<div class="infowindowContent">'+
-                '<h5 id="location">Sensor location: '+locations[i].name+'</h5>'+
+                '<h5 id="location">Anomaly at '+dataArray[i].latitude+' ,'+dataArray[i].longlitude+'</h5>'+
                 '<div id="bodyContent">'+
-                    '<div>Coordinates: '+ locations[i].lat+', '+ locations[i].lng+'</div>'+    
-                    '<div>Elevation: '+ locations[i].elevation+'</div>'+    
-                    '<div>CO2 (ppm): '+ locations[i].co2+ ' CH4 (ppb): '+ locations[i].ch4+'</div>'+
-                    '<div>Dewpoint temp (°C): '+ locations[i].dewptT+'</div>'+  
-                    '<div>Atmospheric pressure (milibar): '+ locations[i].pressure+'</div>'+  
-                    '<div>Wind direction (°): '+ locations[i].windDir+ ' Wind speed (m/s): '+ locations[i].windSpd+'</div>'+  
+                    '<div>Power: '+Math.round(dataArray[i].power)+' MW</div>'+    
+                    '<div>Confidence: '+dataArray[i].confidence+' %</div>'+    
                 '</div>'+
             '</div>'
         });
@@ -115,6 +106,7 @@ function initMap() {
         
     }            
     
+    /** 
     //For indicating elevation
     var elevator = new google.maps.ElevationService;
     //Renders the popup window indicating metres of elevation
@@ -124,7 +116,9 @@ function initMap() {
     map.addListener('click', function(event) {
         displayLocationElevation(event.latLng, elevator, infowindow);
     });
+    */
 
+    /** 
     //Settings for the heatmap. It is rendered as a layer above the base map stored in 'var map'
     heatmap = new google.maps.visualization.HeatmapLayer({
         data: selectHeatmapData(),
@@ -151,6 +145,7 @@ function initMap() {
             document.getElementById('popup-content.'+i));
         popup.setMap(map);
     }
+    */
 }
 function displayLocationElevation(location, elevator, infowindow) {
     // Initiate the location request
@@ -172,14 +167,6 @@ function displayLocationElevation(location, elevator, infowindow) {
         }
     });
 }
-function selectHeatmapData () {
-    if(usech4Data === false){
-        return co2Data;
-    } else if(usech4Data === true){
-        return ch4Data
-    }
-}
-
 //createPopupClass() Returns the Popup class.
 //Unfortunately, the Popup class can only be defined after
 //google.maps.OverlayView is defined, when the Maps API is loaded.
@@ -275,19 +262,84 @@ function changeRadius() {
 function changeOpacity() {
     heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
 }
-//Changes which GHG's data is displayed
-function changeGHG(){
-    usech4Data === false ? (usech4Data = true) : (usech4Data = false); 
+//Changes which of current date's data is displayed
+function changeDataDisplayed(dataType){
+    //usech4Data === false ? (usech4Data = true) : (usech4Data = false); 
     
+    if(dataType === 'power'){
+          
+
+    }else if (dataType === 'confidence'){
+
+    }else {
+        console.log('Invalid data type requested for display');
+    }
+
     //Cannot use heatmap.set to swap 'data' property of rendered heatmap
     //or it will log TypeErrors in console.
     //Need to re-render Map if 'data' property changed
     initMap()
 
+    /*
     //Sets the gradient for the resulting Map
     if (usech4Data === false){
         heatmap.set('gradient', co2BrightGradient)
     } else if (usech4Data === true){
         heatmap.set('gradient', ch4BrightGradient)
     }
+    */
+}
+//Heatmap = data displayed. Should merge with changeDataDisplayed()
+function selectHeatmapData (dataType) {
+    //Should apply to any data type
+    heatmapData = []
+    //Setup so that weight at SCI (baseline location) = 1
+
+    
+    for(i=0; i<dataArray.length; i++){
+        heatmapData[i] = { location: new google.maps.LatLng(dataArray[i].latitude, dataArray[i].longlitude), weight: (dataArray[i].power) }
+    }
+    
+    /** 
+    ch4Data = []
+    //Setup so that weight at SCI (baseline location) = 1
+    //(locations[i].co2/locations[0].co2)
+    for(i=0; i<locations.length; i++){
+        ch4Data[i] = { location: new google.maps.LatLng(locations[i].lat, locations[i].lng), weight: (locations[i].ch4/locations[0].ch4) }
+    }
+    */
+
+
+    /** 
+    if(usech4Data === false){
+        return co2Data;
+    } else if(usech4Data === true){
+        return ch4Data
+    }
+    */
+   return heatmapData
+}
+//Changes data assigned to mapData() to one from different date
+function changeMapData(form){
+    const day = form.dayInput.value;
+    const month = form.monthInput.value;
+    const year = form.yearInput.value;
+    let databaseUrl = day+month+year; //Ex: modis/1Sept2019
+    console.log('Target databaseUrl: '+databaseUrl)
+
+    database.ref('modis/'+databaseUrl).once('value', (snapshot) => {
+      //Gets object attached to 'snapshot'            
+      const data = snapshot.val()
+      console.log(data)
+      //console.log(Object.keys(data).length);
+
+      if(data === null || data.length === 0){
+        document.getElementById('map').innerHTML = 'No data found for selected date';
+        console.log('Error retrieving data from Firebase db')
+      } else {
+        const dataArray = Object.values(data);
+        console.log(dataArray)
+        runInitMap(dataArray);
+      }
+    })
 }

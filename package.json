@@ -4,7 +4,7 @@
   "description": "Test bed for implementation of Google Maps API, Bootstrap and a graphing package (D3js or Canvas) in a single website",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "nodemon server.js",
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

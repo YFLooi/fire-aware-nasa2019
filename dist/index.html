@@ -58,65 +58,122 @@
           chartElementToggle[i].checked = true
         }
 
-        initMap();
+        const database = firebase.database();
+        function onloadRender(){
+          database.ref('modis/1Sep2019').once('value', (snapshot) => {
+            //Gets object attached to 'snapshot'            
+            const data = snapshot.val()
+            console.log(data)
+            //console.log(Object.keys(data).length);
+
+            if(data === null || data.length === 0){
+              document.getElementById('map').innerHTML = 'No data found for selected date';
+              console.log('Error retrieving data from Firebase db')
+            } else {
+              const dataArray = Object.values(data);
+              console.log(dataArray)
+              runInitMap(dataArray);
+            }
+          })
+        }
+
+        onloadRender();
         renderChart();
       }
     </script>
-
-  <script type='text/javascript'>
-    const database = firebase.database();
-
-    function fetchDb(){
-      database.ref('modis/1Sep2019').once('value', (snapshot) => {
-        //Gets object attached to 'snapshot'
-        //This comment pulls in the db data into an object
-        const data = snapshot.val()
-        
-        //Will output an object. The object contains all data as its properties
-        console.log(Object.keys(data).length);
-
-        
-        /*
-        for(i=0 ; i<i++){
-
-        }*/
-
-      })
-  
-    }
-  </script>
   </head>
-  <body>
-    <h3>Greenhouse gas emission visualiser</h3>
-    <!--The div element for the map -->
-    <button onclick="fetchDb()">db check</button>
 
+  <body>
+    <div class='header' style="background-color: black; color: white; padding: 10px; margin-bottom: 10px;">
+      <h2>Air pollutant emission visualiser</h2>
+    </div>
+    <!--The div element for the map -->
     <div id='mapContainer'>
-      <div id="map"></div>
+      <div id="map"></div>  
     </div>
     <!--Serves as target to render <div>-s containing labels for popups-->
     <div id='popup-content'></div>
     
+    <div id='dateSelect' style="margin:10px;">
+      <h4>Select date:</h4>
+      <form name='dateForData' onsubmit='event.preventDefault(); changeMapData(this)'> 
+        <span>
+          <select name='dayInput'>
+            <option value='1' selected>1</option>
+            <option value='2'>2</option>
+            <option value='3'>3</option>
+            <option value='4'>4</option>
+            <option value='5'>5</option>
+            <option value='6'>6</option>
+            <option value='7'>7</option>
+            <option value='8'>8</option>
+            <option value='9'>9</option>
+            <option value='10'>10</option>
+            <option value='11'>11</option>
+            <option value='12'>12</option>
+            <option value='13'>13</option>
+            <option value='14'>14</option>
+            <option value='15'>15</option>
+            <option value='16'>16</option>
+            <option value='17'>17</option>
+            <option value='18'>18</option>
+            <option value='19'>19</option>
+            <option value='20'>20</option>
+            <option value='21'>21</option>
+            <option value='22'>22</option>
+            <option value='23'>23</option>
+            <option value='24'>24</option>
+            <option value='25'>25</option>
+            <option value='26'>26</option>
+            <option value='27'>27</option>
+            <option value='28'>28</option>
+            <option value='29'>29</option>
+            <option value='30'>30</option>
+            <option value='31'>31</option>
+          </select>
+          <select name='monthInput'>
+              <option value='Jan'>Jan</option>
+              <option value='Feb'>Feb</option>
+              <option value='Mar'>Mar</option>
+              <option value='Apr'>Apr</option>
+              <option value='May'>May</option>
+              <option value='Jun'>Jun</option>
+              <option value='Jul'>Jul</option>
+              <option value='Aug'>Aug</option>
+              <option value='Sep' selected>Sep</option>
+              <option value='Oct'>Oct</option>
+              <option value='Nov'>Nov</option>
+              <option value='Dec'>Dec</option>
+          </select>
+          <select name='yearInput'>
+              <option value='2018'>2018</option>
+              <option value='2019' selected>2019</option>
+          </select>
+          <input type='submit' value="&#8981;" onclick="event.keyCode === 13"/>
+        </span>
+      </form>
+    </div>
     <div id="floating-panel">
-        <button type='button' class='btn btn-secondary' onclick="changeGHG()">CO2/CH4 toggle</button>
-        <!--Recentres the viewport and clears all changes by re-rendering the onload map-->
-        <button type='button' class='btn btn-secondary' onclick="initMap()">Reset map</button> 
-        <button type='button' class='btn btn-secondary' onclick="toggleHeatmap()">Heatmap on/off</button>
-        <button type='button' class='btn btn-secondary' onclick="changeGradient()">Darken background</button>
-        <button type='button' class='btn btn-secondary' onclick="changeRadius()">Change radius</button>
-        <button type='button' class='btn btn-secondary' onclick="changeOpacity()">Change opacity</button>
+        <div>
+            <button type='button' class='btn btn-primary' onclick="changeDataDisplayed('power')">Thermal anomalies</button>
+            <button type='button' class='btn btn-primary' onclick="changeDataDisplayed('confidence')">Confidence</button>
+        </div>  
+        <div>
+          <!--Recentres the viewport and clears all changes by re-rendering the onload map-->
+          <button type='button' class='btn btn-secondary' onclick="initMap()">Reset map</button> 
+          <button type='button' class='btn btn-secondary' onclick="toggleHeatmap()">Heatmap on/off</button>
+          <button type='button' class='btn btn-secondary' onclick="changeGradient()">Darken background</button>
+          <button type='button' class='btn btn-secondary' onclick="changeRadius()">Change radius</button>
+          <button type='button' class='btn btn-secondary' onclick="changeOpacity()">Change opacity</button>
+        </div>
     </div>
     <p></p>
     <div>
         <p>
-            Radius and intensity of heatmap center increases with CO2 (
-            <span style='display:inline-block; width:10px; height: 10px; background-color:rgba(0, 255, 0, 1);'></span>
-            ) and CH4 (
-            <span style='display:inline-block; width:10px; height: 10px; background-color:rgb(255, 250, 0);'></span>
-            ) concentration above baseline of CO2 and CH4 readings at San Clemente Island (SCI) 
+            Radius and intensity of heatmap center increases with pollutant above baseline 
         </p>
         <p>
-            Click on map to show local elevation. Click on markers to display additional data for each location
+            Click on markers to display additional data for each location
         </p>
     </div>
     <p></p>

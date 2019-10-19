@@ -1,17 +1,9 @@
 //Locations. Assume this data is retrieved from a db for a specific time and hour
 /** */
 const database = firebase.database();
-const locations = [
-    {name: 'San Clemente Island', shortName:'SCI', lat: 32.92, lng: -118.49, elevation: '100m', co2: 411, ch4: 1000, dewptT: -6.25, pressure: 1011, windDir: 158.7, windSpd: 0.79},
-    {name: 'California Institute of Technology', shortName:'CIT', lat: 34.14, lng: -118.13, elevation: '20m', co2: 435, ch4: 1014, dewptT: 4.0, pressure: 1025, windDir: 320.1, windSpd: 0.01},
-    {name: 'Irvine', shortName:'IRV', lat: 33.64, lng: -117.84, elevation: '25m', co2: 480, ch4: 1025, dewptT: 3.12, pressure: 1035, windDir: 50.7, windSpd: 0.21},
-    {name: 'Granada Hills', shortName:'GRA', lat: 34.28, lng: -118.47, elevation: '150m', co2: 422, ch4: 1035, dewptT: -2.27, pressure: 1020, windDir: 180.2, windSpd: 0.56},
-    {name: 'La Jolla', shortName:'LJA', lat: 32.87, lng: -117.25, elevation: '10m', co2: 415, ch4: 1100, dewptT: 4.13, pressure: 1012, windDir: 90.1, windSpd: 0.87},
-]
-
 
 //'Popup' is a class, popup is a variable
-let map, heatmap, co2Data, ch4Data, popup, Popup;
+let map, heatmap, popup, Popup;
 
 //First value determines outermost gradient. Must be 'rgba(255, 255, 255, 0)'
 //or the entire map will be coloured
@@ -51,40 +43,45 @@ const ch4DarkGradient = [
     'rgba(255, 250, 0, 1)',
 ]
 
+//Contains all data to render the map
 let mapData = [];
+//Acts as toggle to determine which data type in mapData[] used to render heatmap and popups under Map pins
+//Default is 'power', which measures intensity of fires
+let dataType = 'frp';
 function runInitMap(newMapData){
     mapData.splice(0, mapData.length)
     console.log('newMapData:');
     console.log(newMapData);
 
     if(newMapData.length === 0){
-        document.getElementById('map').innerHTML = 'No data found for selected date';
+        const placeholder = document.createElement('div');
+        placeholder.setAttribute('style', 'color:white;');
+        placeholder.appendChild(document.createTextNode('No data found for selected date'));
+
+        document.getElementById('map').appendChild(placeholder);
     } else {
         document.getElementById('map').innerHTML = '';
         mapData = [...mapData, ...newMapData];
         initMap();
     }
 }
+function updateDataType (newDataType){
+    dataType = newDataType;
+    initMap();
+}
 
 // On page load, initialize and add the map
 function initMap() {
-    //On page load, processes co2 and ch4 data for rendering onto map
-    //By default, sends co2Data to map on page load
-    //Weight can indicate ppm emissions relative to baseline at SCI: Let weight = ppm at location/ppm @ SCI
-    
-    //var dataArray populated on page load. Script in index.html
-    const dataArray = mapData;
-    
     // The location of centre point. Here, we choose the middle of the South China Sea
-    var centerCoordinates = {lat: 2.4374, lng: 110.4814};
+    var centerCoordinates = {lat: 9.5, lng: 113.7};  
     // The map, centered at at the coordinates in 'var centre'
     //mapTypeId determines the type of map on render. Can be 'roadmap', 'satellite', or 'terrain'
     map = new google.maps.Map(
-        document.getElementById('map'), {zoom: 4.5, center: centerCoordinates, mapTypeId: 'terrain'});
+        document.getElementById('map'), {zoom: 4.2, center: centerCoordinates, mapTypeId: 'terrain'});
     // for loop to generate all the markers for anomaly position
-    for (i=0; i<dataArray.length; i++){
+    for (i=0; i<mapData.length; i++){
         let marker = new google.maps.Marker({
-            position: {lat: dataArray[i].latitude, lng: dataArray[i].longlitude}, 
+            position: {lat: mapData[i].latitude, lng: mapData[i].longlitude}, 
             map: map,
             title: 'Anomaly detected' //Appears on hover over the marker
         })
@@ -93,10 +90,10 @@ function initMap() {
         //Otherwise, the InfoWindow will be blank or appear in some odd place
         let infowindow = new google.maps.InfoWindow({
             content: '<div class="infowindowContent">'+
-                '<h5 id="location">Anomaly at '+dataArray[i].latitude+' ,'+dataArray[i].longlitude+'</h5>'+
+                '<div id="location"><b>Thermal anomaly at '+mapData[i].latitude+' ,'+mapData[i].longlitude+'</b></div>'+
                 '<div id="bodyContent">'+
-                    '<div>Power: '+Math.round(dataArray[i].power)+' MW</div>'+    
-                    '<div>Confidence: '+dataArray[i].confidence+' %</div>'+    
+                    '<div>Fire Radiative Power (FRP): '+Math.round(mapData[i].frp)+' MW</div>'+    
+                    '<div>Confidence: '+mapData[i].confidence+' %</div>'+    
                 '</div>'+
             '</div>'
         });
@@ -105,67 +102,93 @@ function initMap() {
         });
         
     }            
-    
-    /** 
-    //For indicating elevation
-    var elevator = new google.maps.ElevationService;
-    //Renders the popup window indicating metres of elevation
-    var infowindow = new google.maps.InfoWindow({map: map});
-    // Add a listener click event on 'var map'. Display the elevation for the LatLng of
-    // the click inside the infowindow.
-    map.addListener('click', function(event) {
-        displayLocationElevation(event.latLng, elevator, infowindow);
-    });
-    */
-
-    /** 
+   
     //Settings for the heatmap. It is rendered as a layer above the base map stored in 'var map'
     heatmap = new google.maps.visualization.HeatmapLayer({
         data: selectHeatmapData(),
         map: map,
-        gradient: co2BrightGradient,
-        radius: 40,
+        gradient: ch4BrightGradient,
+        radius: 30
     });
 
+    /** 
     //Renders a popup for each location
-    for (i=0; i<locations.length; i++){
+    for (i=0; i<mapData.length; i++){
         //Renders the <div>-s containing content for reach popup
         //This hijacks the original code that needs a pre-defined <div> containing the popup's content
         const popupContentTarget = document.getElementById('popup-content');
         let popupContent = document.createElement('div');
         popupContent.setAttribute('id','popup-content.'+i); 
-        usech4Data === true ? popupContent.innerHTML = `CH4: ${locations[i].ch4} ppb` : popupContent.innerHTML = `CO2: ${locations[i].co2} ppm`;
-        popupContentTarget.appendChild(popupContent)
+
+        if(dataType === 'power'){
+            popupContent.innerHTML = `Power: ${mapData[i].power} MW` 
+            popupContentTarget.appendChild(popupContent)
+        }else if (dataType === 'confidence'){
+            popupContent.innerHTML = `Confidence: ${mapData[i].confidence} %` 
+            popupContentTarget.appendChild(popupContent)
+        } else {
+            console.log('Invalid value assigned to dataType');
+        }
 
         Popup = createPopupClass();
         //Passes location and content for popup to Popup();
         //The 'content' property takes the entire DOM obtained by document.getElementById
         popup = new Popup(
-            new google.maps.LatLng(locations[i].lat, locations[i].lng),
+            new google.maps.LatLng(mapData[i].latitude, mapData[i].longlitude),
             document.getElementById('popup-content.'+i));
         popup.setMap(map);
     }
     */
 }
-function displayLocationElevation(location, elevator, infowindow) {
-    // Initiate the location request
-    elevator.getElevationForLocations({
-        'locations': [location]
-    }, function(results, status) {
-        infowindow.setPosition(location);
-        if (status === 'OK') {
-            // Retrieve the first result
-            if (results[0]) {
-            // Open the infowindow indicating the elevation at the clicked position.
-            infowindow.setContent('The elevation at this point <br>is ' +
-                results[0].elevation.toFixed(0) + ' meters.');
-            } else {
-            infowindow.setContent('No results found');
-            }
-        } else {
-            infowindow.setContent('Elevation service failed due to: ' + status);
+function selectHeatmapData () {
+    heatmapData = []
+    console.log('dataType sent to selectHeatmap data: '+dataType);
+
+    if(dataType === 'frp'){
+        for(i=0; i<mapData.length; i++){
+            heatmapData[i] = { location: new google.maps.LatLng(mapData[i].latitude, mapData[i].longlitude), weight: (mapData[i].frp) }
         }
-    });
+    }else if (dataType === 'confidence'){
+        for(i=0; i<mapData.length; i++){
+            heatmapData[i] = { location: new google.maps.LatLng(mapData[i].latitude, mapData[i].longlitude), weight: (mapData[i].confidence) }
+        }
+    }else {
+        console.log('Invalid string assigned to dataType')
+    }
+    return heatmapData
+}
+//Changes data assigned to mapData() to one from different date
+function changeMapData(form){
+    const day = form.dayInput.value;
+    const month = form.monthInput.value;
+    const year = form.yearInput.value;
+    const tod = form.todInput.value;
+    let databaseUrl = day+month+year+tod; //Ex: modis/1Sept2019
+    console.log('Target databaseUrl: '+databaseUrl)
+
+    database.ref('modis/'+databaseUrl).once('value', (snapshot) => {
+      //Gets object attached to 'snapshot'            
+      const data = snapshot.val()
+      console.log(data)
+      //console.log(Object.keys(data).length);
+
+      if(data === null || data.length === 0){
+        document.getElementById('map').innerHTML = '';
+
+        const placeholder = document.createElement('div');
+        placeholder.setAttribute('style', 'color:white; text-align: center;');
+        placeholder.appendChild(document.createTextNode('No data found for selected date'));
+        document.getElementById('map').appendChild(placeholder);
+        /** 
+        document.getElementById('map').innerHTML = 'No data found for selected date';
+        console.log('Error retrieving data from Firebase db')
+        */
+      } else {
+        const dataArray = Object.values(data);
+        console.log(dataArray)
+        runInitMap(dataArray);
+      }
+    })
 }
 //createPopupClass() Returns the Popup class.
 //Unfortunately, the Popup class can only be defined after
@@ -232,6 +255,29 @@ function createPopupClass() {
 
     return Popup;
 }
+/* 
+function displayLocationElevation(location, elevator, infowindow) {
+    // Initiate the location request
+    elevator.getElevationForLocations({
+        'locations': [location]
+    }, function(results, status) {
+        infowindow.setPosition(location);
+        if (status === 'OK') {
+            // Retrieve the first result
+            if (results[0]) {
+            // Open the infowindow indicating the elevation at the clicked position.
+            infowindow.setContent('The elevation at this point <br>is ' +
+                results[0].elevation.toFixed(0) + ' meters.');
+            } else {
+            infowindow.setContent('No results found');
+            }
+        } else {
+            infowindow.setContent('Elevation service failed due to: ' + status);
+        }
+    });
+}
+*/
+
 
 //These functions alter the heatmap
 //Turns the heatmap on/off
@@ -239,6 +285,7 @@ function toggleHeatmap() {
     heatmap.setMap(heatmap.getMap() ? null : map);
 }
 //Toggles the gradient between red-yellow-green to red-cyan-purple
+/** 
 function changeGradient() {
     let targetGradient = [];
     if(heatmap.get('gradient') === co2BrightGradient && usech4Data === false){
@@ -258,88 +305,11 @@ function changeGradient() {
 function changeRadius() {
     heatmap.set('radius', heatmap.get('radius') ===  40 ? 60 : 40);
 }
+
 //Changes the intensity of the heatmap's colours
 function changeOpacity() {
     heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
 }
+*/
 //Changes which of current date's data is displayed
-function changeDataDisplayed(dataType){
-    //usech4Data === false ? (usech4Data = true) : (usech4Data = false); 
-    
-    if(dataType === 'power'){
-          
 
-    }else if (dataType === 'confidence'){
-
-    }else {
-        console.log('Invalid data type requested for display');
-    }
-
-    //Cannot use heatmap.set to swap 'data' property of rendered heatmap
-    //or it will log TypeErrors in console.
-    //Need to re-render Map if 'data' property changed
-    initMap()
-
-    /*
-    //Sets the gradient for the resulting Map
-    if (usech4Data === false){
-        heatmap.set('gradient', co2BrightGradient)
-    } else if (usech4Data === true){
-        heatmap.set('gradient', ch4BrightGradient)
-    }
-    */
-}
-//Heatmap = data displayed. Should merge with changeDataDisplayed()
-function selectHeatmapData (dataType) {
-    //Should apply to any data type
-    heatmapData = []
-    //Setup so that weight at SCI (baseline location) = 1
-
-    
-    for(i=0; i<dataArray.length; i++){
-        heatmapData[i] = { location: new google.maps.LatLng(dataArray[i].latitude, dataArray[i].longlitude), weight: (dataArray[i].power) }
-    }
-    
-    /** 
-    ch4Data = []
-    //Setup so that weight at SCI (baseline location) = 1
-    //(locations[i].co2/locations[0].co2)
-    for(i=0; i<locations.length; i++){
-        ch4Data[i] = { location: new google.maps.LatLng(locations[i].lat, locations[i].lng), weight: (locations[i].ch4/locations[0].ch4) }
-    }
-    */
-
-
-    /** 
-    if(usech4Data === false){
-        return co2Data;
-    } else if(usech4Data === true){
-        return ch4Data
-    }
-    */
-   return heatmapData
-}
-//Changes data assigned to mapData() to one from different date
-function changeMapData(form){
-    const day = form.dayInput.value;
-    const month = form.monthInput.value;
-    const year = form.yearInput.value;
-    let databaseUrl = day+month+year; //Ex: modis/1Sept2019
-    console.log('Target databaseUrl: '+databaseUrl)
-
-    database.ref('modis/'+databaseUrl).once('value', (snapshot) => {
-      //Gets object attached to 'snapshot'            
-      const data = snapshot.val()
-      console.log(data)
-      //console.log(Object.keys(data).length);
-
-      if(data === null || data.length === 0){
-        document.getElementById('map').innerHTML = 'No data found for selected date';
-        console.log('Error retrieving data from Firebase db')
-      } else {
-        const dataArray = Object.values(data);
-        console.log(dataArray)
-        runInitMap(dataArray);
-      }
-    })
-}

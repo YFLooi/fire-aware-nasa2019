@@ -3,29 +3,34 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>Greenhouse gas emission visualiser</title>
+    <title>FireApp</title>
+    <link rel="icon" href="./favicon.ico?v=3" />
+    <!--Borrowing MaterialUI's -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" />
+    <!--Style for this website-->
+    <link rel="stylesheet" href="./css/generalStyles.css" />
 
-     <!-- The core Firebase JS SDK is always required and must be listed first -->
-     <!-- Original end of this url is 'firebase-app.js'. This does not work!! Use firebase.js instead-->
-     <script src="https://www.gstatic.com/firebasejs/7.2.0/firebase.js"></script>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <!-- Original end of this url is 'firebase-app.js'. This does not work!! Use firebase.js instead-->
+    <script src="https://www.gstatic.com/firebasejs/7.2.0/firebase.js"></script>
 
-     <!-- TODO: Add SDKs for Firebase products that you want to use
-         https://firebase.google.com/docs/web/setup#available-libraries -->
- 
-     <script>
-       // Your web app's Firebase configuration
-       var firebaseConfig = {
-         apiKey: "AIzaSyAplfPUP0ygPtbSQYWEG6cr2vlAl6misvw",
-         authDomain: "nasa2019-a41ab.firebaseapp.com",
-         databaseURL: "https://nasa2019-a41ab.firebaseio.com",
-         projectId: "nasa2019-a41ab",
-         storageBucket: "nasa2019-a41ab.appspot.com",
-         messagingSenderId: "947284643043",
-         appId: "1:947284643043:web:04f306d3ff8556dbde49d6"
-       };
-       // Initialize Firebase
-       firebase.initializeApp(firebaseConfig);
-     </script>
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+        https://firebase.google.com/docs/web/setup#available-libraries -->
+
+    <script>
+      // Your web app's Firebase configuration
+      var firebaseConfig = {
+        apiKey: "AIzaSyAplfPUP0ygPtbSQYWEG6cr2vlAl6misvw",
+        authDomain: "nasa2019-a41ab.firebaseapp.com",
+        databaseURL: "https://nasa2019-a41ab.firebaseio.com",
+        projectId: "nasa2019-a41ab",
+        storageBucket: "nasa2019-a41ab.appspot.com",
+        messagingSenderId: "947284643043",
+        appId: "1:947284643043:web:04f306d3ff8556dbde49d6"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
 
 
     <link rel="stylesheet" href="./css/mapStyles.css">
@@ -45,9 +50,6 @@
     <!--Scripts to operate Google Maps API-->
     <script type="text/javascript" src='./js/map.js'></script> 
     <script type="text/javascript" src="./js/bundle.js"></script>
-    <!--Scripts to operate Canvas.js maps-->
-    <script type="text/javascript" src="./canvas/canvasjs.min.js"></script>
-    <script type="text/javascript" src="./js/chart.js"></script>
     <script type='text/javascript'>
       window.onload = function () {
         //Sets all checkboxes for chart element to 'checked' on page load
@@ -60,7 +62,7 @@
 
         const database = firebase.database();
         function onloadRender(){
-          database.ref('modis/1Sep2019').once('value', (snapshot) => {
+          database.ref('modis/1Oct2019D').once('value', (snapshot) => {
             //Gets object attached to 'snapshot'            
             const data = snapshot.val()
             console.log(data)
@@ -78,129 +80,239 @@
         }
 
         onloadRender();
-        renderChart();
+      }
+      window.smoothScroll = function(target) {
+        var scrollContainer = target;
+        do { //find scroll container
+            scrollContainer = scrollContainer.parentNode;
+            if (!scrollContainer) return;
+            scrollContainer.scrollTop += 1;
+        } while (scrollContainer.scrollTop == 0);
+
+        var targetY = 0;
+        do { //find the top of target relatively to the container
+            if (target == scrollContainer) break;
+            targetY += target.offsetTop;
+        } while (target = target.offsetParent);
+
+        scroll = function(c, a, b, i) {
+            i++; if (i > 30) return;
+            c.scrollTop = a + (b - a) / 30 * i;
+            setTimeout(function(){ scroll(c, a, b, i); }, 20);
+        }
+        // start scrolling
+        scroll(scrollContainer, scrollContainer.scrollTop, targetY, 0);
       }
     </script>
   </head>
 
-  <body>
-    <div class='header' style="background-color: black; color: white; padding: 10px; margin-bottom: 10px;">
-      <h2>Air pollutant emission visualiser</h2>
+  <body style='background: url(./paleBlueDot.jpg) bottom center no-repeat; background-size: cover;'>
+    <div class='header' style="color: white; padding: 10px; height: 600px; width: 100%; display: flex; 
+    border:0.1px solid black; background: url(./banner.jpg) center no-repeat; background-size: cover;">
+      <div style='margin: auto;'>
+        <h1 style='text-align: center;'>FireApp</h1>
+        <div style='text-align: center;'>Turning Fire Data Into Insight and Action</div>
+        <p></p>
+        <div style='display: flex; justify-content:center;'>
+          <button type='button' class='btn btn-primary' style='display: inline-flex;'>Download the App</button>
+          &nbsp;&nbsp;&nbsp;
+          <button type='button' class='btn btn-primary' style='display: inline-flex;' onclick="smoothScroll(document.getElementById('dataDisplay'))">
+            How You Help
+          </button>
+        </div>
+      </div>
     </div>
     <!--The div element for the map -->
-    <div id='mapContainer'>
-      <div id="map"></div>  
-    </div>
-    <!--Serves as target to render <div>-s containing labels for popups-->
-    <div id='popup-content'></div>
-    
-    <div id='dateSelect' style="margin:10px;">
-      <h4>Select date:</h4>
-      <form name='dateForData' onsubmit='event.preventDefault(); changeMapData(this)'> 
-        <span>
-          <select name='dayInput'>
-            <option value='1' selected>1</option>
-            <option value='2'>2</option>
-            <option value='3'>3</option>
-            <option value='4'>4</option>
-            <option value='5'>5</option>
-            <option value='6'>6</option>
-            <option value='7'>7</option>
-            <option value='8'>8</option>
-            <option value='9'>9</option>
-            <option value='10'>10</option>
-            <option value='11'>11</option>
-            <option value='12'>12</option>
-            <option value='13'>13</option>
-            <option value='14'>14</option>
-            <option value='15'>15</option>
-            <option value='16'>16</option>
-            <option value='17'>17</option>
-            <option value='18'>18</option>
-            <option value='19'>19</option>
-            <option value='20'>20</option>
-            <option value='21'>21</option>
-            <option value='22'>22</option>
-            <option value='23'>23</option>
-            <option value='24'>24</option>
-            <option value='25'>25</option>
-            <option value='26'>26</option>
-            <option value='27'>27</option>
-            <option value='28'>28</option>
-            <option value='29'>29</option>
-            <option value='30'>30</option>
-            <option value='31'>31</option>
+    <div id='dataDisplay' class='dataDisplay' style='border:1px solid black; padding: 10px;'>
+      <p></p>
+      <h2 style='color: white; text-align: center;'>We Need to Work Together</h2>
+      <p></p>
+      <div style='color: white; text-align: center;'>The impact of forest fires crosses borders</div>
+      <p></p>
+      <div id='mapContainer' style='min-height: 600px; position: relative;'>
+        <div id="map" style='height: 600px;'></div>  
+      </div>
+      <!--Serves as target to render <div>-s containing labels for popups-->
+      <div id='popup-content'></div>
+      <div id='dateSelect' style="padding: 10px;">
+        <h4 style='color: white; text-align: center;'>Select date and time of day:</h4>
+        <form name='dateForData' style='display: flex; justify-content:center;' onsubmit='event.preventDefault(); changeMapData(this)'> 
+          <span style='display: inline-flex;'>
+            <select name='dayInput'>
+              <option value='1' selected>1</option>
+              <option value='2'>2</option>
+              <option value='3'>3</option>
+              <option value='4'>4</option>
+              <option value='5'>5</option>
+              <option value='6'>6</option>
+              <option value='7'>7</option>
+              <option value='8'>8</option>
+              <option value='9'>9</option>
+              <option value='10'>10</option>
+              <option value='11'>11</option>
+              <option value='12'>12</option>
+              <option value='13'>13</option>
+              <option value='14'>14</option>
+              <option value='15'>15</option>
+              <option value='16'>16</option>
+              <option value='17'>17</option>
+              <option value='18'>18</option>
+              <option value='19'>19</option>
+              <option value='20'>20</option>
+              <option value='21'>21</option>
+              <option value='22'>22</option>
+              <option value='23'>23</option>
+              <option value='24'>24</option>
+              <option value='25'>25</option>
+              <option value='26'>26</option>
+              <option value='27'>27</option>
+              <option value='28'>28</option>
+              <option value='29'>29</option>
+              <option value='30'>30</option>
+              <option value='31'>31</option>
+            </select>
+            &nbsp;&nbsp;
+            <select name='monthInput'>
+                <option value='Jan'>Jan</option>
+                <option value='Feb'>Feb</option>
+                <option value='Mar'>Mar</option>
+                <option value='Apr'>Apr</option>
+                <option value='May'>May</option>
+                <option value='Jun'>Jun</option>
+                <option value='Jul'>Jul</option>
+                <option value='Aug'>Aug</option>
+                <option value='Sep'>Sep</option>
+                <option value='Oct' selected>Oct</option>
+                <option value='Nov'>Nov</option>
+                <option value='Dec'>Dec</option>
+            </select>
+            &nbsp;&nbsp;
+            <select name='yearInput'>
+                <option value='2018'>2018</option>
+                <option value='2019' selected>2019</option>
+            </select>
+            &nbsp;&nbsp;
+            <select name='todInput'> <!--TOD=Time of day-->
+              <option value='D' selected>Day</option>
+              <option value='N'>Night</option>
           </select>
-          <select name='monthInput'>
-              <option value='Jan'>Jan</option>
-              <option value='Feb'>Feb</option>
-              <option value='Mar'>Mar</option>
-              <option value='Apr'>Apr</option>
-              <option value='May'>May</option>
-              <option value='Jun'>Jun</option>
-              <option value='Jul'>Jul</option>
-              <option value='Aug'>Aug</option>
-              <option value='Sep' selected>Sep</option>
-              <option value='Oct'>Oct</option>
-              <option value='Nov'>Nov</option>
-              <option value='Dec'>Dec</option>
-          </select>
-          <select name='yearInput'>
-              <option value='2018'>2018</option>
-              <option value='2019' selected>2019</option>
-          </select>
-          <input type='submit' value="&#8981;" onclick="event.keyCode === 13"/>
-        </span>
-      </form>
+          &nbsp;&nbsp;
+            <input type='submit' value="Submit" onclick="event.keyCode === 13"/>
+          </span>
+        </form>
+      </div>
+      <div id="floating-panel">
+          <div>
+              <button type='button' class='btn btn-primary' onclick="updateDataType('frp')">Thermal anomalies</button>
+              <button type='button' class='btn btn-primary' onclick="updateDataType('confidence')">Confidence</button>
+              &nbsp;||&nbsp;
+              <!--Recentres the viewport and clears all changes by re-rendering the onload map-->
+            <button type='button' class='btn btn-secondary' onclick="initMap()">Reset map</button> 
+            <button type='button' class='btn btn-secondary' onclick="toggleHeatmap()">Heatmap on/off</button>
+          </div>  
+          <!--
+          <div>
+            <button type='button' class='btn btn-secondary' onclick="changeGradient()">Darken background</button>
+            <button type='button' class='btn btn-secondary' onclick="changeRadius()">Change radius</button>
+            <button type='button' class='btn btn-secondary' onclick="changeOpacity()">Change opacity</button>
+            
+          </div>
+          -->
+      </div>
     </div>
-    <div id="floating-panel">
-        <div>
-            <button type='button' class='btn btn-primary' onclick="changeDataDisplayed('power')">Thermal anomalies</button>
-            <button type='button' class='btn btn-primary' onclick="changeDataDisplayed('confidence')">Confidence</button>
-        </div>  
-        <div>
-          <!--Recentres the viewport and clears all changes by re-rendering the onload map-->
-          <button type='button' class='btn btn-secondary' onclick="initMap()">Reset map</button> 
-          <button type='button' class='btn btn-secondary' onclick="toggleHeatmap()">Heatmap on/off</button>
-          <button type='button' class='btn btn-secondary' onclick="changeGradient()">Darken background</button>
-          <button type='button' class='btn btn-secondary' onclick="changeRadius()">Change radius</button>
-          <button type='button' class='btn btn-secondary' onclick="changeOpacity()">Change opacity</button>
-        </div>
+    <!--
+    <div class='actionCenter' style='border:1px solid black; padding: 10px; color: white; min-height: 600px;'>
+        <h2>See how our world changed over the years</h2>
+        <div>'Insert climate change timelapses here'</div>
     </div>
-    <p></p>
-    <div>
-        <p>
-            Radius and intensity of heatmap center increases with pollutant above baseline 
-        </p>
-        <p>
-            Click on markers to display additional data for each location
-        </p>
+    -->
+    <div class='actionCenter' style='display: flex; border:0.1px solid black; padding: 10px; color: black; min-height: 450px;
+    background: url(./signupBackground.jpg) center no-repeat; background-size: cover;'>
+      <!--Setting margin:auto for the inner div and display:flex for the outer div vertically-centers
+      the inner div-->
+      <div class='actionCenterContent' style='margin: auto;'>
+          <h2 style='text-align: center;'>Our Worldwide Partners Are In The Fight</h2>
+          <p></p>
+          <div>Let them know you want to help. Sign up for notifications on events and volunteer opportunities near you</div>
+          <p></p>
+          <p>Email:&nbsp;&nbsp; <input placeholder='example@email.com'></input></p>
+          <p>Country:&nbsp;&nbsp; <input placeholder='Malaysia'></input></p>
+          <div>What are your interests? </div>
+          <div class='organisationPreference'>
+            <input type=checkbox id='preference1' value="conservation"><label for="preference1">&nbsp;Conservation</label>&nbsp;&nbsp;
+            <input type=checkbox id='preference2' value="advocacy"><label for="preference2">&nbsp;Advocacy</label>&nbsp;&nbsp;
+            <input type=checkbox id='preference3' value="education"><label for="preference3">&nbsp;Education</label>&nbsp;&nbsp;
+          </div>
+          <button type='button' class='btn btn-secondary' onclick='alert("Thank you! Look forward to our newsletters")'>Submit</button> 
+      </div>
     </div>
-    <p></p>
-    <!--Canvas.js chart-->
-    <div id="chartContainer" style="height: 300px; width: 100%;"></div>
-    <div id="floating-panel">
-        <button type='button' class='btn btn-secondary' onclick="updateChart()">Update chart data</button><br>
-        <input type="checkbox" name="chartElement" value='CO2 (ppm)' checked onclick='toggleChartElements(0)'> Show CO2 &nbsp;
-        <input type="checkbox" name="chartElement" value='CH4 (ppb)' checked onclick='toggleChartElements(1)'> Show CH4 &nbsp;
-        <input type="checkbox" name="chartElement" value='T ambient (°C)' checked onclick='toggleChartElements(2)'> Show ambient temperature 
+    <div class='partners' style='border:0.1px solid black; padding: 10px; color: black; min-height: 1800px;
+    background: url(./partners.jpg) bottom center no-repeat; background-size: cover;'>
+      <!--Setting margin:auto for the inner div and display:flex for the outer div vertically-centers
+      the inner div-->
+      <h2 style='text-align: center; margin-top: 20px;'>Meet our partner organisations</h2>
+      <div class='actionCenterContent' style='margin: auto; display: flex; justify-content: center; flex-direction: row; flex-wrap: wrap'>
+          <div class="card">
+              <div class='card-img-container'> 
+                <img src="https://environmentcalifornia.org/sites/environment/files/web-logo-_CAE.png" class="card-img-top" alt="logo">
+              </div>
+              <div class="card-body text-center">
+                  <h5 class="card-title">Environment California</h5>
+                  <p class="card-text">We are a citizen-based environmental advocacy organization. Our current actions are to lead the electric vehicle revolution, to power our lives with 100% renewable energy, and to allow wildlife and wild places to thrive</p>
+                  <div href="#" class="btn btn-primary">Join Us</div>
+              </div>
+          </div>
+          <div class="card">
+              <div class='card-img-container'> 
+                  <img src="https://11bup83sxdss1xze1i3lpol4-wpengine.netdna-ssl.com/wp-content/uploads/2014/10/CCL-Logo-H2.png" class="card-img-top" alt="logo">
+              </div>
+              <div class="card-body text-center">
+                  <h5 class="card-title">Citizens' Climate Lobby</h5>
+                  <p class="card-text">CCL empowers everyday people to work together on climate change solutions. We’re building support in Congress for a national bipartisan solution to climate change.</p>
+                  <div href="#" class="btn btn-primary">Join Us</div>
+              </div>
+          </div>
+          <div class="card">
+              <div class='card-img-container'> 
+                  <img src="https://pbs.twimg.com/profile_images/1115288203827658752/_CojTxya_400x400.png" class="card-img-top" alt="logo">
+              </div>
+              <div class="card-body text-center">
+                  <h5 class="card-title">Cool Effect</h5>
+                  <p class="card-text">Our Mission is to Reduce Carbon Emissions: Combining science, expertise, and transparency, we are creating a community built around one simple vision: give people the power and confidence to band together and reduce the carbon pollution that causes climate change.</p>
+                  <div href="#" class="btn btn-primary">Join Us</div>
+              </div>
+          </div>
+          <div class="card">
+              <div class='card-img-container'> 
+                  <img src="https://www.naep.org/assets/media/NAEPChapterLogo/aep.jpg" class="card-img-top" alt="logo">
+              </div>
+              <div class="card-body text-center">
+                  <h5 class="card-title">Association of Environment Professionals</h5>
+                  <p class="card-text">Join public and private sector professionals in serving the California Environmental Quality Act (CEQA) through environmental assessment, analysis, public disclosure, and reporting. </p>
+                  <div href="#" class="btn btn-primary">Join Us</div>
+              </div>
+          </div>
+          <div class="card">
+              <div class='card-img-container'> 
+                  <img src="https://www.ecoliteracy.org/sites/all/themes/ecoliteracy/logo.png" class="card-img-top" alt="logo">
+              </div>
+              <div class="card-body text-center">
+                  <h5 class="card-title">Center for Ecoliteracy</h5>
+                  <p class="card-text">Education for sustainable living through schools teaching and modelling sustainable practices.</p>
+                  <div href="#" class="btn btn-primary">Join Us</div>
+              </div>
+          </div>
+          <div class="card">
+              <div class='card-img-container'> 
+                  <img src="https://www.usgs.gov/sites/all/themes/usgs_palladium/assets/css/img/USGS_black.png" class="card-img-top" alt="logo">
+              </div>
+              <div class="card-body text-center">
+                  <h5 class="card-title">U.S. Geological Survey</h5>
+                  <p class="card-text">We provide science about the natural hazards that threaten lives and livelihoods; the water, energy, minerals, and other natural resources we rely on; the health of our ecosystems and environment; and the impacts of climate and land-use change.</p>
+                  <div href="#" class="btn btn-primary">Join Us</div>
+              </div>
+          </div>
+      </div>
     </div>
-    <p></p>
-    <div>Gradient palette   
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(255, 255, 255, 0);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(0, 191, 255, 1);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(0, 127, 255, 1);'>1</div>
-        <div style='float: left; width: 20px; height: 20px;background-color:rgba(0, 63, 255, 1);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(0, 0, 255, 1);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(0, 0, 127, 1);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(63, 0, 91, 1);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(127, 0, 63, 1);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgba(255, 9, 9, 0.973);'>1</div>
-        <div style='float: left; width: 20px; height: 20px; background-color:rgb(255, 214, 214);'>1</div>
-
-        <div style='float: left; width: 20px; height: 20px; background-color:rgb(255, 251, 0);'>1</div>
-    </div>
-    
-   
   </body>
 </html>

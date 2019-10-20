@@ -1,5 +1,3 @@
-//Locations. Assume this data is retrieved from a db for a specific time and hour
-/** */
 const database = firebase.database();
 
 //'Popup' is a class, popup is a variable
@@ -69,11 +67,34 @@ function updateDataType (newDataType){
     dataType = newDataType;
     initMap();
 }
+function testApiQuery(){
+    fetch('https://radiant-inlet-16283.herokuapp.com/getmsg/?image=https://laistassets.scprdev.org/i/668437babab245a72ea3ccfade845f81/5b69021df1c4b900087ad361-eight.jpg', {
+      method: "GET", 
+      mode: 'cors',
+      headers: {
+        'Access-Control-Allow-Origin':'*'
+      } 
+    })
+      //Here we chain 2 promise functions: The first fetches data (response), the second examines text in response (data)
+      .then(function(response){
+          console.log(response)
+          return response.json()
+          .then(function(data){
+              console.log("Results of API call:");
+              console.log(data);
+          })
+      })  
+      .catch(function(error){
+          console.log('Request failed', error)
+      })
+  }
 
 // On page load, initialize and add the map
 function initMap() {
+    //Allows use of custom map markers/pins
+    const iconBase = 'https://maps.google.com/mapfiles/kml/shapes/';
     // The location of centre point. Here, we choose the middle of the South China Sea
-    var centerCoordinates = {lat: 9.5, lng: 113.7};  
+    const centerCoordinates = {lat: 9.5, lng: 113.7};  
     // The map, centered at at the coordinates in 'var centre'
     //mapTypeId determines the type of map on render. Can be 'roadmap', 'satellite', or 'terrain'
     map = new google.maps.Map(
@@ -82,6 +103,7 @@ function initMap() {
     for (i=0; i<mapData.length; i++){
         let marker = new google.maps.Marker({
             position: {lat: mapData[i].latitude, lng: mapData[i].longlitude}, 
+            icon: '../fireIcon.png', 
             map: map,
             title: 'Anomaly detected' //Appears on hover over the marker
         })
@@ -108,7 +130,7 @@ function initMap() {
         data: selectHeatmapData(),
         map: map,
         gradient: ch4BrightGradient,
-        radius: 30
+        radius: 50
     });
 
     /** 

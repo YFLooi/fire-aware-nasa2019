@@ -5,7 +5,7 @@ See fires happening in Near Real Time. Fires recorded by NASA's MODIS satellite 
 
 Fires can only be stopped if law enforcement, fire departments, and the general public work together. Citizens can sign up to help so that NGOs may contact them e.g. for tree replanting, fire mitigation projects. <br/>
 
-This web app was part of the submission for NASA SpaceApps 2019 held at MaGIC Cyberjaya (19-20 Sept 2019) <br/>
+This web app was part of the submission for NASA SpaceApps 2019 held at MaGIC Cyberjaya (19-20 Sept 2019) by Team [Flat Earthers](https://2019.spaceappschallenge.org/challenges/living-our-world/spot-fire-v20/teams/flat-earthers-original/project) <br/>
 
 Stack:<br/>
 Front end: HTML, CSS, Bootstrap JS<br/>

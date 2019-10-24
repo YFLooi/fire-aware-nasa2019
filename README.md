@@ -1,5 +1,5 @@
 # Fire Aware 
-![website features gif](fireaAware.gif) <br/>
+![website features gif](fireAware.gif) <br/>
 
 See fires happening in Near Real Time. Fires recorded by NASA's MODIS satellite are rendered onto an interactive map using the Google Maps API. Toggle the associated buttons to switch between different data categories (fire intensity, confidence of reading). Intensity of fires and value of confidence (0-100%) reflected in intensity of heatmap colour. <br/>
 
